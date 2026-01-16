@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string>
 
+#define DEBUG
+
 const int SCREEN_WIDTH = 1600; // pixels
 const int SCREEN_HEIGHT = 1200;
 const int GRID_WIDTH = 150; // squares (should be same as max)
@@ -37,74 +39,49 @@ void writePartialArray(int intArray[][MAX], int a, int b,
                        int c, int d, std::string filename);
 void loadPartialArray(std::string filename, int intArray[][MAX]);
 
-int main()
-{
-    //----------S E T U P ------------------------------:
+void runSFMLTestProgram(){
+    sf::RenderWindow window(sf::VideoMode({200, 200}), "SFML works!");
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
 
-    //declare a window object:
-    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
-    //
-    //VideoMode class has functions to detect screen size etc.
-    //RenderWindow constructor has a third argumnet to set style
-    //of the window: resize, fullscreen etc.
-    //
-    //or...
-    // you could do this:
-    //sf::RenderWindow window;
-    //window.create(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "SFML window!");
-    //
-
-    window.setFramerateLimit(15);
-
-    //this is where we keep all the shapes.
-    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
-
-
-    window.setVerticalSyncEnabled(true); // call it once, after creating the window
-    //Application runs at the same freq as monitor
-
-    //. . . . . . . SHAPES ............
-    //this is how you would declare and manipulate shapes:
-    //sf::CircleShape shape(250.f);
-    //shape.setFillColor(sf::Color::Green);
-    //// set a 10-pixel wide orange outline
-    //shape.setOutlineThickness(1);
-    //shape.setOutlineColor(sf::Color(250, 150, 100));
-
-
-    //// define a 120x50 rectangle
-    //sf::RectangleShape rectangle(sf::Vector2f(120, 50));
-    //// change the size to 100x100
-    ////rectangle.setSize(sf::Vector2f(10, 10));
-    //. . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-    // declare int array:
-    int world[MAX][MAX];
-
-    // pause:
-    bool pause = false;
-
-    initialize(world);
-
-    config(world);
-
-    // run the program as long as the window is open
     while (window.isOpen())
     {
-        ProcessEvents(window, pause, world); //Process mouse and keyboard events
-
-        window.clear(); //necessary: get read for the next frame
-
-        if(!pause){
-            step(world);
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+                window.close();
         }
 
-        FillShapes(shapeArray, world); // determine size/position/color of the shapes
-
-        ShowShapes(window, shapeArray); // draw the shapes on the window object
-
-        window.display(); //display the window and all its shapes
+        window.clear();
+        window.draw(shape);
+        window.display();
     }
+}
+
+int main()
+{
+    #ifdef DEBUG
+        runSFMLTestProgram();
+    #else
+        sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
+        window.setFramerateLimit(15);
+        sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
+        window.setVerticalSyncEnabled(true);
+        int world[MAX][MAX];
+        bool pause = false;
+        initialize(world);
+        config(world);
+        while (window.isOpen()){
+            ProcessEvents(window, pause, world);
+            window.clear();
+            if(!pause){
+                step(world);
+            }
+            FillShapes(shapeArray, world);
+            ShowShapes(window, shapeArray);
+            window.display();
+        }
+    #endif
 
     return 0;
 }
