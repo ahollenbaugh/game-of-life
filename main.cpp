@@ -81,6 +81,9 @@ void runSemiUpdatedProgram(){
         ProcessEvents(window, pause, world);
         window.clear();
         // window.draw(shape);
+        if(!pause){
+            step(world);
+        }
         FillShapes(shapeArray, world);
         ShowShapes(window, shapeArray);
         window.display();
@@ -124,14 +127,8 @@ int main()
 }
 
 void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
-    
     int mouseX, mouseY, mouseA, mouseB;
     string str;
-    // while(const std::optional event = window.pollEvent()){
-    //     if(event->is<sf::Event::Closed>()){
-    //         window.close();
-    //     }
-    // }
     while (const std::optional event = window.pollEvent()){
         if (event->is<sf::Event::Closed>())
         {
@@ -141,35 +138,52 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
             window.close();
         }
         else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
-            #ifdef DEBUG
-                std::cout << "ProcessEvents -- a key was pressed!" << endl;
-            #else
-                if (keyPressed->scancode == sf::Keyboard::Scancode::P)
+            if (keyPressed->scancode == sf::Keyboard::Scancode::P){
+                    std::cout << "ProcessEvents -- the P key was pressed! ";
+                    pause == true ? std::cout << "Resuming..." << endl : std::cout << "Pausing..." << endl;
                     pause = !pause;
-                else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
+                #ifdef DEBUG
+                    std::cout << "ProcessEvents -- the R key was pressed! Randomizing..." << endl;
                     pause = true;
                     config(twoD);
-                }
-                else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
+                #else
+                    
+                #endif
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
+                #ifdef DEBUG
+                    std::cout << "ProcessEvents -- the C key was pressed! Clearing screen..." << endl;
                     pause = true;
                     clear(twoD);
-                }
-                else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
+                #else
+                    
+                #endif
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
+                #ifdef DEBUG
+                    std::cout << "ProcessEvents -- the S key was pressed!" << endl;
+                #else
                     pause = true;
                     std::cout << ">> ";
                     std::cin >> str;
                     str += ".txt";
                     WriteIntArray(str, twoD);
-                }
-                else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
+                #endif
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
+                #ifdef DEBUG
+                    std::cout << "ProcessEvents -- the L key was pressed!" << endl;
+                #else
                     pause = true;
                     clear(twoD);
                     std::cout << ">> ";
                     std::cin >> str;
                     str += ".txt";
                     ReadIntArray(str, twoD);
-                }
-            #endif
+                #endif
+            }
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
             #ifdef DEBUG
