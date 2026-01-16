@@ -12,8 +12,9 @@ const int SCREEN_WIDTH = 1600; // pixels
 const int SCREEN_HEIGHT = 1200;
 const int GRID_WIDTH = 150; // squares (should be same as max)
 const int GRID_HEIGHT = 150;
-const int CELL_SIZE = 10; // 10x10 pixels for each square
+const int CELL_SIZE = 20; // 10x10 pixels for each square
 const int MAX = 150; // dimensions of integer array
+const int FRAME_RATE = 10;
 
 using namespace std;
 
@@ -32,12 +33,12 @@ void blinker(int twoD[][MAX]);
 void glider(int twoD[][MAX]);
 void clear(int twoD[][MAX]);
 void menu();
-void WriteIntArray(std::string filename, int intArray[][MAX]);
-void ReadIntArray(std::string filename, int intArray[][MAX]);
+void WriteIntArray(string filename, int intArray[][MAX]);
+void ReadIntArray(string filename, int intArray[][MAX]);
 void makeLive(int intArray[][MAX], int i, int j);
 void pixelsToSquares(int &i, int &j);
-void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, std::string filename);
-void loadPartialArray(std::string filename, int intArray[][MAX]);
+void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, string filename);
+void loadPartialArray(string filename, int intArray[][MAX]);
 
 void runSFMLTestProgram(){
     sf::RenderWindow window(sf::VideoMode({200, 200}), "SFML works!");
@@ -46,7 +47,7 @@ void runSFMLTestProgram(){
 
     while (window.isOpen())
     {
-        while (const std::optional event = window.pollEvent())
+        while (const optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
                 window.close();
@@ -60,30 +61,18 @@ void runSFMLTestProgram(){
 
 void runSemiUpdatedProgram(){
     // This is a temporary function for pinpointing the cause of the original program's crashing at runtime.
-    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
-    window.setFramerateLimit(15);
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Conway's Game of Life");
+    window.setFramerateLimit(FRAME_RATE);
     sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
     window.setVerticalSyncEnabled(true);
     int world[MAX][MAX];
     bool pause = false;
     initialize(world);
     config(world);
-    // sf::CircleShape shape(100.f);
-    // shape.setFillColor(sf::Color::Green);
-
-    while (window.isOpen())
-    {
-        // while (const std::optional event = window.pollEvent())
-        // {
-        //     if (event->is<sf::Event::Closed>())
-        //         window.close();
-        // }
+    while (window.isOpen()){
         ProcessEvents(window, pause, world);
         window.clear();
-        // window.draw(shape);
-        if(!pause){
-            step(world);
-        }
+        if(!pause) step(world);
         FillShapes(shapeArray, world);
         ShowShapes(window, shapeArray);
         window.display();
@@ -129,23 +118,23 @@ int main()
 void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
     int mouseX, mouseY, mouseA, mouseB;
     string str;
-    while (const std::optional event = window.pollEvent()){
+    while (const optional event = window.pollEvent()){
         if (event->is<sf::Event::Closed>())
         {
             #ifdef DEBUG
-                std::cout << "ProcessEvents -- closing window. Goodbye!" << endl;
+                cout << "ProcessEvents -- closing window. Goodbye!" << endl;
             #endif
             window.close();
         }
         else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
             if (keyPressed->scancode == sf::Keyboard::Scancode::P){
-                    std::cout << "ProcessEvents -- the P key was pressed! ";
-                    pause == true ? std::cout << "Resuming..." << endl : std::cout << "Pausing..." << endl;
+                    cout << "ProcessEvents -- the P key was pressed! ";
+                    pause == true ? cout << "Resuming..." << endl : cout << "Pausing..." << endl;
                     pause = !pause;
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
                 #ifdef DEBUG
-                    std::cout << "ProcessEvents -- the R key was pressed! Randomizing..." << endl;
+                    cout << "ProcessEvents -- the R key was pressed! Randomizing..." << endl;
                     pause = true;
                     config(twoD);
                 #else
@@ -154,7 +143,7 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
                 #ifdef DEBUG
-                    std::cout << "ProcessEvents -- the C key was pressed! Clearing screen..." << endl;
+                    cout << "ProcessEvents -- the C key was pressed! Clearing screen..." << endl;
                     pause = true;
                     clear(twoD);
                 #else
@@ -163,23 +152,23 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
                 #ifdef DEBUG
-                    std::cout << "ProcessEvents -- the S key was pressed!" << endl;
+                    cout << "ProcessEvents -- the S key was pressed! Saving pattern..." << endl;
                 #else
                     pause = true;
-                    std::cout << ">> ";
-                    std::cin >> str;
+                    cout << ">> ";
+                    cin >> str;
                     str += ".txt";
                     WriteIntArray(str, twoD);
                 #endif
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
                 #ifdef DEBUG
-                    std::cout << "ProcessEvents -- the L key was pressed!" << endl;
+                    cout << "ProcessEvents -- the L key was pressed! Loading pattern..." << endl;
                 #else
                     pause = true;
                     clear(twoD);
-                    std::cout << ">> ";
-                    std::cin >> str;
+                    cout << ">> ";
+                    cin >> str;
                     str += ".txt";
                     ReadIntArray(str, twoD);
                 #endif
@@ -187,35 +176,43 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
             #ifdef DEBUG
-                std::cout << "ProcessEvents -- mouse button was pressed!" << endl;
+                cout << "ProcessEvents -- mouse button was pressed!" << endl;
+                mouseA = sf::Mouse::getPosition(window).x;
+                mouseB = sf::Mouse::getPosition(window).y;
+                cout << "(" << mouseA << ", " << mouseB << ")" << endl;
             #else
-                mouseA = sf::Mouse::getPosition().x;
-                mouseB = sf::Mouse::getPosition().y;
+                
             #endif
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonReleased>()){
             #ifdef DEBUG
-                std::cout << "ProcessEvents -- mouse button was released!" << endl;
-            #else
+                cout << "ProcessEvents -- mouse button was released!" << endl;
                 if(keyPressed->button == sf::Mouse::Button::Right){
-                    std::cout << "the right button was pressed" << std::endl;
-                    std::cout << "mouse x: " << sf::Mouse::getPosition().x << std::endl;
-                    std::cout << "mouse y: " << sf::Mouse::getPosition().y << std::endl;
+                    cout << "the right button was pressed" << endl;
+                    cout << "mouse x: " << sf::Mouse::getPosition(window).x << endl;
+                    cout << "mouse y: " << sf::Mouse::getPosition(window).y << endl;
                 }
                 else if(keyPressed->button == sf::Mouse::Button::Left){
-                    std::cout<<"left button?"<<std::endl;
-                    mouseX = sf::Mouse::getPosition().x;
-                    mouseY = sf::Mouse::getPosition().y;
-                    std::cout << "[" << mouseX << "][" << mouseY << "] was pressed." << std::endl;
+                    cout << "left button?" << endl;
+                    // pause = true;
+                    mouseX = sf::Mouse::getPosition(window).x;
+                    mouseY = sf::Mouse::getPosition(window).y;
+                    cout << "[" << mouseX << "][" << mouseY << "] was pressed." << endl;
                     makeLive(twoD, mouseX, mouseY);
-                    if(mouseA != mouseX && mouseB != mouseY){
-                        std::cout << ">> ";
-                        std::cin >> str;
-                        str += ".txt";
-                        writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
-                    }
+                    // if(mouseA != mouseX && mouseB != mouseY){
+                    //     cout << ">> ";
+                    //     cin >> str;
+                    //     str += ".txt";
+                    //     writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
+                    // }
                 }
+            #else
+                
             #endif
+        }
+        else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()){
+            std::cout << "new mouse x: " << mouseMoved->position.x << std::endl;
+            std::cout << "new mouse y: " << mouseMoved->position.y << std::endl;
         }
     }
 
@@ -436,20 +433,29 @@ void ReadIntArray(string filename, int intArray[][MAX]){
 void makeLive(int intArray[][MAX], int i, int j){
     // toggle live/dead
     pixelsToSquares(i, j); // convert to squares
-    if(intArray[j][i] == 1){
-        intArray[j][i] = 0;
+    if(intArray[i][j] == 1){
+        intArray[i][j] = 0;
     }
     else{
-        intArray[j][i] = 1;
+        intArray[i][j] = 1;
     }
+    #ifdef DEBUG
+        cout << "makeLive -- the value at row " << j << " and col " << i << " is now set to " << intArray[j][i] << endl;
+    #endif
 }
 void pixelsToSquares(int &i, int &j){
     // convert pixel coordinates to square/grid coordinates
+    #ifdef DEBUG
+        cout << "pixelsToSquares -- converting pixels i = " << i << " and j = " << j << endl;
+    #endif
     i /= CELL_SIZE;
     j /= CELL_SIZE;
+    #ifdef DEBUG
+        cout << "pixelsToSquares -- now squares i = " << i << " and j = " << j << endl;
+    #endif
 }
 void writePartialArray(int intArray[][MAX], int a, int b,
-                       int c, int d, std::string filename){
+                       int c, int d, string filename){
     // save a portion of the screen to a file
     ofstream outFile; // 1. declare file object
     outFile.open(filename); // 2. open
@@ -467,6 +473,6 @@ void writePartialArray(int intArray[][MAX], int a, int b,
     }
     outFile.close(); // 5. close
 }
-void loadPartialArray(std::string filename, int intArray[][MAX]){
+void loadPartialArray(string filename, int intArray[][MAX]){
     // load a portion of the screen from a file
 }
