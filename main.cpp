@@ -6,6 +6,7 @@
 #include <string>
 
 #define DEBUG
+#define SEMI
 
 const int SCREEN_WIDTH = 1600; // pixels
 const int SCREEN_HEIGHT = 1200;
@@ -58,10 +59,33 @@ void runSFMLTestProgram(){
     }
 }
 
+void runSemiUpdatedProgram(){
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
+    // sf::CircleShape shape(100.f);
+    // shape.setFillColor(sf::Color::Green);
+
+    while (window.isOpen())
+    {
+        while (const std::optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+        }
+
+        window.clear();
+        // window.draw(shape);
+        window.display();
+    }
+}
+
 int main()
 {
     #ifdef DEBUG
-        runSFMLTestProgram();
+        #ifndef SEMI
+            runSFMLTestProgram();
+        #else
+            runSemiUpdatedProgram();
+        #endif
     #else
         sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
         window.setFramerateLimit(15);
