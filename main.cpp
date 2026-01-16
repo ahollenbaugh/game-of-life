@@ -60,7 +60,15 @@ void runSFMLTestProgram(){
 }
 
 void runSemiUpdatedProgram(){
+    // This is a temporary function for pinpointing the cause of the original program's crashing at runtime.
     sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
+    window.setFramerateLimit(15);
+    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
+    window.setVerticalSyncEnabled(true);
+    int world[MAX][MAX];
+    bool pause = false;
+    initialize(world);
+    config(world);
     // sf::CircleShape shape(100.f);
     // shape.setFillColor(sf::Color::Green);
 
@@ -74,6 +82,29 @@ void runSemiUpdatedProgram(){
 
         window.clear();
         // window.draw(shape);
+        FillShapes(shapeArray, world);
+        ShowShapes(window, shapeArray);
+        window.display();
+    }
+}
+
+void runMainProgram(){
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
+    window.setFramerateLimit(15);
+    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
+    window.setVerticalSyncEnabled(true);
+    int world[MAX][MAX];
+    bool pause = false;
+    initialize(world);
+    config(world);
+    while (window.isOpen()){
+        ProcessEvents(window, pause, world);
+        window.clear();
+        if(!pause){
+            step(world);
+        }
+        FillShapes(shapeArray, world);
+        ShowShapes(window, shapeArray);
         window.display();
     }
 }
@@ -87,24 +118,7 @@ int main()
             runSemiUpdatedProgram();
         #endif
     #else
-        sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
-        window.setFramerateLimit(15);
-        sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
-        window.setVerticalSyncEnabled(true);
-        int world[MAX][MAX];
-        bool pause = false;
-        initialize(world);
-        config(world);
-        while (window.isOpen()){
-            ProcessEvents(window, pause, world);
-            window.clear();
-            if(!pause){
-                step(world);
-            }
-            FillShapes(shapeArray, world);
-            ShowShapes(window, shapeArray);
-            window.display();
-        }
+        runMainProgram();
     #endif
 
     return 0;
