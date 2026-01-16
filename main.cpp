@@ -36,8 +36,7 @@ void WriteIntArray(std::string filename, int intArray[][MAX]);
 void ReadIntArray(std::string filename, int intArray[][MAX]);
 void makeLive(int intArray[][MAX], int i, int j);
 void pixelsToSquares(int &i, int &j);
-void writePartialArray(int intArray[][MAX], int a, int b,
-                       int c, int d, std::string filename);
+void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, std::string filename);
 void loadPartialArray(std::string filename, int intArray[][MAX]);
 
 void runSFMLTestProgram(){
@@ -74,12 +73,12 @@ void runSemiUpdatedProgram(){
 
     while (window.isOpen())
     {
-        while (const std::optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-        }
-
+        // while (const std::optional event = window.pollEvent())
+        // {
+        //     if (event->is<sf::Event::Closed>())
+        //         window.close();
+        // }
+        ProcessEvents(window, pause, world);
         window.clear();
         // window.draw(shape);
         FillShapes(shapeArray, world);
@@ -125,183 +124,86 @@ int main()
 }
 
 void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
-    // check all the window's events that were triggered since the last iteration of the loop
-
-    std::optional event = window.pollEvent(); // event->is<sf::Event::Closed>()
+    
     int mouseX, mouseY, mouseA, mouseB;
     string str;
-
-    //go through all the pending events: keyboard, mouse, close, resize, etc.
-    //pollEvent and waitEvent are the only two functions that can fill event
-    while (event)//or waitEvent
-    {
-        // check the type of the event...
-        if (event->is<sf::Event::Closed>())
-        {
+    while(const std::optional event = window.pollEvent()){
+        if(event->is<sf::Event::Closed>()){
             window.close();
         }
-        else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
-            // check which key pressed
-            // sf::Keyboard::Key::A
-            if (keyPressed->scancode == sf::Keyboard::Scancode::P)
-                pause = !pause;
-            else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
-                pause = true;
-                config(twoD);
-            }
-            else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
-                pause = true;
-                clear(twoD);
-            }
-            else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
-                pause = true;
-                std::cout << ">> ";
-                std::cin >> str;
-                str += ".txt";
-                WriteIntArray(str, twoD);
-            }
-            else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
-                pause = true;
-                clear(twoD);
-                std::cout << ">> ";
-                std::cin >> str;
-                str += ".txt";
-                ReadIntArray(str, twoD);
-            }
-        }
-        else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
-            // mouseA = event.mouseButton.x;
-            // mouseB = event.mouseButton.y;
-            mouseA = sf::Mouse::getPosition().x;
-            mouseB = sf::Mouse::getPosition().y;
-        }
-        else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonReleased>()){
-            if(keyPressed->button == sf::Mouse::Button::Right){
-                std::cout << "the right button was pressed" << std::endl;
-                std::cout << "mouse x: " << sf::Mouse::getPosition().x << std::endl;
-                std::cout << "mouse y: " << sf::Mouse::getPosition().y << std::endl;
-            }
-            else if(keyPressed->button == sf::Mouse::Button::Left){
-                std::cout<<"left button?"<<std::endl;
-
-                // bottom right coordinates stored here
-                mouseX = sf::Mouse::getPosition().x;
-                mouseY = sf::Mouse::getPosition().y;
-                std::cout << "[" << mouseX << "][" << mouseY
-                          << "] was pressed." << std::endl;
-
-                // toggle live/dead cells
-                makeLive(twoD, mouseX, mouseY);
-
-                if(mouseA != mouseX && mouseB != mouseY){
-
-                    // if the coordinates of the mouse press
-                    // are different from the mouse release
-                    // coordinates, that means the user
-                    // has clicked and dragged from one
-                    // part of the screen to another
-                    // to save a portion of the screen
-
-                    std::cout << ">> ";
-                    std::cin >> str;
-                    str += ".txt";
-                    writePartialArray(twoD, mouseA, mouseB,
-                                      mouseX, mouseY, str);
-                }
-            }
-        }
-
-
-        // switch (event.type)
+    }
+    // while (event){
+        // if (event->is<sf::Event::Closed>())
         // {
-        // // window closed
-        // // "close requested" event: we close the window
-        // case sf::Event::Closed:
+        //     #ifdef DEBUG
+        //         std::cout << "ProcessEvents -- closing window. Goodbye!" << endl;
+        //     #endif
         //     window.close();
-        //     break;
-        //     // key pressed
-        // case sf::Event::KeyPressed:
-        //     switch(event.key.code){
-        //     case sf::Keyboard::P:
-        //         // [P]ause (toggle)
-        //         pause = !pause;
-        //         break;
-        //     case sf::Keyboard::R:
-        //         // generate [R]andom pattern
-        //         pause = true;
-        //         config(twoD);
-        //         break;
-        //     case sf::Keyboard::C:
-        //         // [C]lear screen
-        //         pause = true;
-        //         clear(twoD);
-        //         break;
-        //     case sf::Keyboard::S:
-        //         // [S]ave screenshot
-        //         pause = true;
-        //         std::cout << ">> ";
-        //         std::cin >> str;
-        //         str += ".txt";
-        //         WriteIntArray(str, twoD);
-        //         break;
-        //     case sf::Keyboard::L:
-        //         // [L]oad screenshot or selection
-        //         pause = true;
-        //         clear(twoD);
-        //         std::cout << ">> ";
-        //         std::cin >> str;
-        //         str += ".txt";
-        //         ReadIntArray(str, twoD);
-        //         break;
-        //     }
-        //     break;
-        // case sf::Event::MouseButtonPressed:
-        //     // upper left coordinates stored here
-        //     mouseA = event.mouseButton.x;
-        //     mouseB = event.mouseButton.y;
-        //     break;
-        // case sf::Event::MouseButtonReleased:
-        //     if (event.mouseButton.button == sf::Mouse::Right)
-        //     {
-        //         // right mouse button
-        //         std::cout << "the right button was pressed" << std::endl;
-        //         std::cout << "mouse x: " << event.mouseButton.x << std::endl;
-        //         std::cout << "mouse y: " << event.mouseButton.y << std::endl;
-        //     }
-        //     else{
-        //         // left mouse button
-        //         std::cout<<"left button?"<<std::endl;
-
-        //         // bottom right coordinates stored here
-        //         mouseX = event.mouseButton.x;
-        //         mouseY = event.mouseButton.y;
-        //         std::cout << "[" << mouseX << "][" << mouseY
-        //                   << "] was pressed." << std::endl;
-
-        //         // toggle live/dead cells
-        //         makeLive(twoD, mouseX, mouseY);
-
-        //         if(mouseA != mouseX && mouseB != mouseY){
-
-        //             // if the coordinates of the mouse press
-        //             // are different from the mouse release
-        //             // coordinates, that means the user
-        //             // has clicked and dragged from one
-        //             // part of the screen to another
-        //             // to save a portion of the screen
-
+        // }
+        // else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
+        //     #ifdef DEBUG
+        //         std::cout << "ProcessEvents -- a key was pressed!" << endl;
+        //     #else
+        //         if (keyPressed->scancode == sf::Keyboard::Scancode::P)
+        //             pause = !pause;
+        //         else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
+        //             pause = true;
+        //             config(twoD);
+        //         }
+        //         else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
+        //             pause = true;
+        //             clear(twoD);
+        //         }
+        //         else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
+        //             pause = true;
         //             std::cout << ">> ";
         //             std::cin >> str;
         //             str += ".txt";
-        //             writePartialArray(twoD, mouseA, mouseB,
-        //                               mouseX, mouseY, str);
+        //             WriteIntArray(str, twoD);
         //         }
-        //     }
-        //     break;
-        // default:
-        //     break;
+        //         else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
+        //             pause = true;
+        //             clear(twoD);
+        //             std::cout << ">> ";
+        //             std::cin >> str;
+        //             str += ".txt";
+        //             ReadIntArray(str, twoD);
+        //         }
+        //     #endif
         // }
-    }
+        // else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
+        //     #ifdef DEBUG
+        //         std::cout << "ProcessEvents -- mouse button was pressed!" << endl;
+        //     #else
+        //         mouseA = sf::Mouse::getPosition().x;
+        //         mouseB = sf::Mouse::getPosition().y;
+        //     #endif
+        // }
+        // else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonReleased>()){
+        //     #ifdef DEBUG
+        //         std::cout << "ProcessEvents -- mouse button was released!" << endl;
+        //     #else
+        //         if(keyPressed->button == sf::Mouse::Button::Right){
+        //             std::cout << "the right button was pressed" << std::endl;
+        //             std::cout << "mouse x: " << sf::Mouse::getPosition().x << std::endl;
+        //             std::cout << "mouse y: " << sf::Mouse::getPosition().y << std::endl;
+        //         }
+        //         else if(keyPressed->button == sf::Mouse::Button::Left){
+        //             std::cout<<"left button?"<<std::endl;
+        //             mouseX = sf::Mouse::getPosition().x;
+        //             mouseY = sf::Mouse::getPosition().y;
+        //             std::cout << "[" << mouseX << "][" << mouseY << "] was pressed." << std::endl;
+        //             makeLive(twoD, mouseX, mouseY);
+        //             if(mouseA != mouseX && mouseB != mouseY){
+        //                 std::cout << ">> ";
+        //                 std::cin >> str;
+        //                 str += ".txt";
+        //                 writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
+        //             }
+        //         }
+        //     #endif
+        // }
+    // }
 
 }
 
