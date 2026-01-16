@@ -35,7 +35,7 @@ void clear(int twoD[][MAX]);
 void menu();
 void WriteIntArray(string filename, int intArray[][MAX]);
 void ReadIntArray(string filename, int intArray[][MAX]);
-void makeLive(int intArray[][MAX], int i, int j);
+void makeLive(int intArray[][MAX], int j, int i);
 void pixelsToSquares(int &i, int &j);
 void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, string filename);
 void loadPartialArray(string filename, int intArray[][MAX]);
@@ -430,7 +430,7 @@ void ReadIntArray(string filename, int intArray[][MAX]){
     inFile.close();
 
 }
-void makeLive(int intArray[][MAX], int i, int j){
+void makeLive(int intArray[][MAX], int j, int i){
     // toggle live/dead
     pixelsToSquares(i, j); // convert to squares
     if(intArray[i][j] == 1){
