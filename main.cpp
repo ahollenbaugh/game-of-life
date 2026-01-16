@@ -1,104 +1,67 @@
 #include <iomanip>
 #include <iostream>
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
 #include <fstream>
 #include <string>
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
 
 #define DEBUG
 #define SEMI
 
-const int GRID_WIDTH = 150; // squares (should be same as max)
-const int GRID_HEIGHT = 150;
-const int CELL_SIZE = 10; // 10x10 pixels for each square
-const int MAX = 150; // dimensions of integer array
-const int SCREEN_WIDTH = MAX * CELL_SIZE; // pixels
-const int SCREEN_HEIGHT = MAX * CELL_SIZE;
-const int FPS = 10;
-
 using namespace std;
 
-void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]);
-void ShowShapes(sf::RenderWindow &window, sf::RectangleShape shapeArray[][GRID_WIDTH]);
-void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]);
-int Random(int lo, int hi);
-void initialize(int twoD[][MAX]);
-void config(int twoD[][MAX]);
-void step(int twoD[][MAX]);
-int count(int twoD[][MAX], int i, int j);
-void copy(int dest[][MAX], int src[][MAX]);
-void print2D(int twoD[][MAX]);
-void wrap(int twoD[][MAX]);
+
+
+// ========== Constants ==========
+// set integer array + RectangleShape array dimensions
+const int MAX = 150;
+const int GRID_WIDTH = MAX;
+const int GRID_HEIGHT = MAX;
+const int CELL_SIZE = 10; // each square in the grid will be 10px x 10px
+
+// window settings
+const int SCREEN_WIDTH = MAX * CELL_SIZE; // pixels
+const int SCREEN_HEIGHT = MAX * CELL_SIZE;
+const int FPS = 15;
+// ===============================
+
+
+
+// ========== Function Prototypes ==========
+// essential functions
+int count(int twoD[][MAX], int i, int j); // count how many neighbors a cell has
+void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]); // create squares in grid
+void ShowShapes(sf::RenderWindow &window, sf::RectangleShape shapeArray[][GRID_WIDTH]); // actually draw the grid in the window
+void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]); // detects key presses, mouse clicks, etc. and responds accordingly
+void initialize(int twoD[][MAX]); // initialize all values in the array to zero
+void config(int twoD[][MAX]); // generate a random pattern (either to start, or when prompted by user)
+void step(int twoD[][MAX]); // figure out how the next frame will look
+void copy_array(int dest[][MAX], int src[][MAX]); // copy the source array to the destination array
+void wrap(int twoD[][MAX]); // keeps cells visible rather than letting them go off screen
+void clear(int twoD[][MAX]); // clear screen
+void WriteIntArray(string filename, int intArray[][MAX]); // save current frame to file
+void ReadIntArray(string filename, int intArray[][MAX]); // load frame from file
+void makeLive(int intArray[][MAX], int j, int i); // toggle live/dead (should rename)
+void pixelsToSquares(int &i, int &j); // convert pixel coordinates to square grid coordinates
+void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, string filename); // save only a portion of the current frame to file
+void loadPartialArray(string filename, int intArray[][MAX]); // load portion of a frame from file
+
+// special shapes
 void blinker(int twoD[][MAX]);
 void glider(int twoD[][MAX]);
-void clear(int twoD[][MAX]);
-void menu();
-void WriteIntArray(string filename, int intArray[][MAX]);
-void ReadIntArray(string filename, int intArray[][MAX]);
-void makeLive(int intArray[][MAX], int j, int i);
-void pixelsToSquares(int &i, int &j);
-void writePartialArray(int intArray[][MAX], int a, int b, int c, int d, string filename);
-void loadPartialArray(string filename, int intArray[][MAX]);
 
-void runSFMLTestProgram(){
-    sf::RenderWindow window(sf::VideoMode({200, 200}), "SFML works!");
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+// debugging
+void print2D(int twoD[][MAX]); // print the integer array
+void menu(); // show options (in command line for now)
+void runSFMLTestProgram();
+void runSemiUpdatedProgram();
+void runMainProgram();
 
-    while (window.isOpen())
-    {
-        while (const optional event = window.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                window.close();
-        }
+// unused but keeping just in case
+int Random(int lo, int hi);
+// =========================================
 
-        window.clear();
-        window.draw(shape);
-        window.display();
-    }
-}
 
-void runSemiUpdatedProgram(){
-    // This is a temporary function for pinpointing the cause of the original program's crashing at runtime.
-    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Conway's Game of Life");
-    window.setFramerateLimit(FPS);
-    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
-    window.setVerticalSyncEnabled(true);
-    int world[MAX][MAX];
-    bool pause = false;
-    initialize(world);
-    config(world);
-    while (window.isOpen()){
-        ProcessEvents(window, pause, world);
-        window.clear();
-        if(!pause) step(world);
-        FillShapes(shapeArray, world);
-        ShowShapes(window, shapeArray);
-        window.display();
-    }
-}
-
-void runMainProgram(){
-    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
-    window.setFramerateLimit(15);
-    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
-    window.setVerticalSyncEnabled(true);
-    int world[MAX][MAX];
-    bool pause = false;
-    initialize(world);
-    config(world);
-    while (window.isOpen()){
-        ProcessEvents(window, pause, world);
-        window.clear();
-        if(!pause){
-            step(world);
-        }
-        FillShapes(shapeArray, world);
-        ShowShapes(window, shapeArray);
-        window.display();
-    }
-}
 
 int main()
 {
@@ -115,6 +78,47 @@ int main()
     return 0;
 }
 
+int count(int twoD[][MAX], int i, int j){
+    // count neighbors of a position
+    int neighbors = 0;
+    for(int m = i-1; m <= i+1; m++){ // row
+        for(int n = j-1; n <= j+1; n++){ // column
+            if(twoD[m][n] == 1)
+                neighbors++;
+        }
+    }
+    return neighbors;
+}
+void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]){
+    //create squares
+    int row, col;
+    for (row=0; row<GRID_HEIGHT; row++){
+        for (col=0; col<GRID_WIDTH; col++){
+            int vectorY=row*(CELL_SIZE);
+            int vectorX=col*(CELL_SIZE);
+            shapeArray[row][col].setSize(sf::Vector2f(CELL_SIZE,CELL_SIZE)); // creates a square (ex: 10x10)
+            shapeArray[row][col].setPosition(sf::Vector2f(vectorX,vectorY));
+            if(intArray[row][col] == 1){
+                shapeArray[row][col].setFillColor(sf::Color(127,255,0)); // green
+            }
+            else{
+                shapeArray[row][col].setFillColor(sf::Color(0,0,0)); // black
+            }
+        }
+    }
+
+    // want cell color to change the longer it stays alive
+
+}
+void ShowShapes(sf::RenderWindow& window, sf::RectangleShape shapeArray[][GRID_WIDTH]){
+    // draw squares on the window object
+    for (int row=0; row<GRID_HEIGHT; row++){
+        for (int col=0; col<GRID_WIDTH; col++){
+            window.draw(shapeArray[row][col]); // draws the array on the screen
+        }
+    }
+
+}
 void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
     int mouseX, mouseY, mouseA, mouseB;
     string str;
@@ -198,41 +202,6 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
     }
 
 }
-
-void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]){
-    //create squares
-    int row, col;
-    for (row=0; row<GRID_HEIGHT; row++){
-        for (col=0; col<GRID_WIDTH; col++){
-            int vectorY=row*(CELL_SIZE);
-            int vectorX=col*(CELL_SIZE);
-            shapeArray[row][col].setSize(sf::Vector2f(CELL_SIZE,CELL_SIZE)); // creates a square (ex: 10x10)
-            shapeArray[row][col].setPosition(sf::Vector2f(vectorX,vectorY));
-            if(intArray[row][col] == 1){
-                shapeArray[row][col].setFillColor(sf::Color(127,255,0)); // green
-            }
-            else{
-                shapeArray[row][col].setFillColor(sf::Color(0,0,0)); // black
-            }
-        }
-    }
-
-    // want cell color to change the longer it stays alive
-
-}
-void ShowShapes(sf::RenderWindow& window, sf::RectangleShape shapeArray[][GRID_WIDTH]){
-    // draw squares on the window object
-    for (int row=0; row<GRID_HEIGHT; row++){
-        for (int col=0; col<GRID_WIDTH; col++){
-            window.draw(shapeArray[row][col]); // draws the array on the screen
-        }
-    }
-
-}
-int Random(int lo, int hi){
-    int r = rand()%(hi+1)+lo+1;
-    return r;
-}
 void initialize(int twoD[][MAX]){
     // initialize all values to zero
     for(int i = 0; i < MAX; i++){
@@ -277,26 +246,10 @@ void step(int twoD[][MAX]){
     }
 
     // then once everything is counted, copy back over to the original array
-
-    for(int i = 1; i < MAX-1; i++){
-        for(int j = 1; j < MAX-1; j++){
-            twoD[i][j] = temp[i][j];
-        }
-    }
+    copy_array(twoD, temp);
 
 }
-int count(int twoD[][MAX], int i, int j){
-    // count neighbors of a position
-    int neighbors = 0;
-    for(int m = i-1; m <= i+1; m++){ // row
-        for(int n = j-1; n <= j+1; n++){ // column
-            if(twoD[m][n] == 1)
-                neighbors++;
-        }
-    }
-    return neighbors;
-}
-void copy(int dest[][MAX], int src[][MAX]){
+void copy_array(int dest[][MAX], int src[][MAX]){
     // copy from source to destination
     for(int i = 0; i < MAX; i++){
         for(int j = 0; j < MAX; j++){
@@ -304,18 +257,7 @@ void copy(int dest[][MAX], int src[][MAX]){
         }
     }
 }
-void print2D(int twoD[][MAX]){
-    // print 2D array
-    for(int i = 1; i < MAX-1; i++){
-        for(int j = 1; j < MAX-1; j++){
-            if(twoD[i][j] == 0)
-                cout << setw(4) << " ";
-            if(twoD[i][j] == 1)
-                cout << setw(4) << "*";
-        }
-        cout << endl;
-    }
-}
+
 void wrap(int twoD[][MAX]){
     // connect borders
     for(int i = 0; i < MAX; i++){
@@ -327,40 +269,6 @@ void wrap(int twoD[][MAX]){
         twoD[MAX-1][j] = twoD[1][j];
     }
 }
-void blinker(int twoD[][MAX]){
-    // blinker test pattern
-
-    // vertical
-
-//    twoD[4][1] = 1;
-//    twoD[5][1] = 1;
-//    twoD[6][1] = 1;
-
-    // horizontal
-
-    twoD[1][4] = 1;
-    twoD[1][5] = 1;
-    twoD[1][6] = 1;
-}
-void glider(int twoD[][MAX]){
-    // glider test pattern
-
-    // version 2
-
-    twoD[6][3] = 1;
-    twoD[7][4] = 1;
-    twoD[7][5] = 1;
-    twoD[6][5] = 1;
-    twoD[5][5] = 1;
-
-    // version 1
-
-//    twoD[1][2] = 1;
-//    twoD[2][3] = 1;
-//    twoD[3][1] = 1;
-//    twoD[3][2] = 1;
-//    twoD[3][3] = 1;
-}
 void clear(int twoD[][MAX]){
     // clear array
     for(int i = 0; i < MAX; i++){
@@ -368,11 +276,6 @@ void clear(int twoD[][MAX]){
             twoD[i][j] = 0;
         }
     }
-}
-void menu(){
-    cout << endl
-         << "[S]AVE" << setw(12) << "[L]OAD" << setw(12) << "[C]LEAR"<< setw(12) << "[R]ANDOM" << endl
-         << "S[T]EP" << setw(12) << "E[X]IT" << setw(12) << "[?]MENU" << endl;
 }
 void WriteIntArray(string filename, int intArray[][MAX]){
     // writes whole screen to a file
@@ -456,4 +359,118 @@ void writePartialArray(int intArray[][MAX], int a, int b,
 }
 void loadPartialArray(string filename, int intArray[][MAX]){
     // load a portion of the screen from a file
+}
+void blinker(int twoD[][MAX]){
+    // blinker test pattern
+
+    // vertical
+
+//    twoD[4][1] = 1;
+//    twoD[5][1] = 1;
+//    twoD[6][1] = 1;
+
+    // horizontal
+
+    twoD[1][4] = 1;
+    twoD[1][5] = 1;
+    twoD[1][6] = 1;
+}
+void glider(int twoD[][MAX]){
+    // glider test pattern
+
+    // version 2
+
+    twoD[6][3] = 1;
+    twoD[7][4] = 1;
+    twoD[7][5] = 1;
+    twoD[6][5] = 1;
+    twoD[5][5] = 1;
+
+    // version 1
+
+//    twoD[1][2] = 1;
+//    twoD[2][3] = 1;
+//    twoD[3][1] = 1;
+//    twoD[3][2] = 1;
+//    twoD[3][3] = 1;
+}
+void print2D(int twoD[][MAX]){
+    // print 2D array
+    for(int i = 1; i < MAX-1; i++){
+        for(int j = 1; j < MAX-1; j++){
+            if(twoD[i][j] == 0)
+                cout << setw(4) << " ";
+            if(twoD[i][j] == 1)
+                cout << setw(4) << "*";
+        }
+        cout << endl;
+    }
+}
+void menu(){
+    cout << endl
+         << "[S]AVE" << setw(12) << "[L]OAD" << setw(12) << "[C]LEAR"<< setw(12) << "[R]ANDOM" << endl
+         << "S[T]EP" << setw(12) << "E[X]IT" << setw(12) << "[?]MENU" << endl;
+}
+void runSFMLTestProgram(){
+    sf::RenderWindow window(sf::VideoMode({200, 200}), "SFML works!");
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
+
+    while (window.isOpen())
+    {
+        while (const optional event = window.pollEvent())
+        {
+            if (event->is<sf::Event::Closed>())
+                window.close();
+        }
+
+        window.clear();
+        window.draw(shape);
+        window.display();
+    }
+}
+
+void runSemiUpdatedProgram(){
+    // This is a temporary function for pinpointing the cause of the original program's crashing at runtime.
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Conway's Game of Life");
+    window.setFramerateLimit(FPS);
+    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
+    window.setVerticalSyncEnabled(true);
+    int world[MAX][MAX];
+    bool pause = false;
+    initialize(world);
+    config(world);
+    while (window.isOpen()){
+        ProcessEvents(window, pause, world);
+        window.clear();
+        if(!pause) step(world);
+        FillShapes(shapeArray, world);
+        ShowShapes(window, shapeArray);
+        window.display();
+    }
+}
+
+void runMainProgram(){
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
+    window.setFramerateLimit(15);
+    sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
+    window.setVerticalSyncEnabled(true);
+    int world[MAX][MAX];
+    bool pause = false;
+    initialize(world);
+    config(world);
+    while (window.isOpen()){
+        ProcessEvents(window, pause, world);
+        window.clear();
+        if(!pause){
+            step(world);
+        }
+        FillShapes(shapeArray, world);
+        ShowShapes(window, shapeArray);
+        window.display();
+    }
+}
+int Random(int lo, int hi){
+    int r = rand()%(hi+1)+lo+1;
+    return r;
 }
