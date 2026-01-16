@@ -8,13 +8,13 @@
 #define DEBUG
 #define SEMI
 
-const int SCREEN_WIDTH = 1600; // pixels
-const int SCREEN_HEIGHT = 1200;
 const int GRID_WIDTH = 150; // squares (should be same as max)
 const int GRID_HEIGHT = 150;
-const int CELL_SIZE = 20; // 10x10 pixels for each square
+const int CELL_SIZE = 10; // 10x10 pixels for each square
 const int MAX = 150; // dimensions of integer array
-const int FRAME_RATE = 10;
+const int SCREEN_WIDTH = MAX * CELL_SIZE; // pixels
+const int SCREEN_HEIGHT = MAX * CELL_SIZE;
+const int FPS = 10;
 
 using namespace std;
 
@@ -62,7 +62,7 @@ void runSFMLTestProgram(){
 void runSemiUpdatedProgram(){
     // This is a temporary function for pinpointing the cause of the original program's crashing at runtime.
     sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Conway's Game of Life");
-    window.setFramerateLimit(FRAME_RATE);
+    window.setFramerateLimit(FPS);
     sf::RectangleShape shapeArray[GRID_HEIGHT][GRID_WIDTH];
     window.setVerticalSyncEnabled(true);
     int world[MAX][MAX];
