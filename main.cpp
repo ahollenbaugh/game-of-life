@@ -119,36 +119,25 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
     int mouseX, mouseY, mouseA, mouseB;
     string str;
     while (const optional event = window.pollEvent()){
-        if (event->is<sf::Event::Closed>())
-        {
-            #ifdef DEBUG
-                cout << "ProcessEvents -- closing window. Goodbye!" << endl;
-            #endif
+        if (event->is<sf::Event::Closed>()){
+            cout << "ProcessEvents -- closing window. Goodbye!" << endl;
             window.close();
         }
         else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
             if (keyPressed->scancode == sf::Keyboard::Scancode::P){
-                    cout << "ProcessEvents -- the P key was pressed! ";
-                    pause == true ? cout << "Resuming..." << endl : cout << "Pausing..." << endl;
-                    pause = !pause;
+                cout << "ProcessEvents -- the P key was pressed! ";
+                pause == true ? cout << "Resuming..." << endl : cout << "Pausing..." << endl;
+                pause = !pause;
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
-                #ifdef DEBUG
-                    cout << "ProcessEvents -- the R key was pressed! Randomizing..." << endl;
-                    pause = true;
-                    config(twoD);
-                #else
-                    
-                #endif
+                cout << "ProcessEvents -- the R key was pressed! Randomizing..." << endl;
+                pause = true;
+                config(twoD);
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
-                #ifdef DEBUG
-                    cout << "ProcessEvents -- the C key was pressed! Clearing screen..." << endl;
-                    pause = true;
-                    clear(twoD);
-                #else
-                    
-                #endif
+                cout << "ProcessEvents -- the C key was pressed! Clearing screen..." << endl;
+                pause = true;
+                clear(twoD);
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
                 #ifdef DEBUG
@@ -175,40 +164,32 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
             }
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
-            #ifdef DEBUG
-                cout << "ProcessEvents -- mouse button was pressed!" << endl;
-                mouseA = sf::Mouse::getPosition(window).x;
-                mouseB = sf::Mouse::getPosition(window).y;
-                cout << "(" << mouseA << ", " << mouseB << ")" << endl;
-            #else
-                
-            #endif
+            cout << "ProcessEvents -- mouse button was pressed!" << endl;
+            mouseA = sf::Mouse::getPosition(window).x;
+            mouseB = sf::Mouse::getPosition(window).y;
+            cout << "(" << mouseA << ", " << mouseB << ")" << endl;
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonReleased>()){
-            #ifdef DEBUG
-                cout << "ProcessEvents -- mouse button was released!" << endl;
-                if(keyPressed->button == sf::Mouse::Button::Right){
-                    cout << "the right button was pressed" << endl;
-                    cout << "mouse x: " << sf::Mouse::getPosition(window).x << endl;
-                    cout << "mouse y: " << sf::Mouse::getPosition(window).y << endl;
-                }
-                else if(keyPressed->button == sf::Mouse::Button::Left){
-                    cout << "left button?" << endl;
-                    // pause = true;
-                    mouseX = sf::Mouse::getPosition(window).x;
-                    mouseY = sf::Mouse::getPosition(window).y;
-                    cout << "[" << mouseX << "][" << mouseY << "] was pressed." << endl;
-                    makeLive(twoD, mouseX, mouseY);
-                    // if(mouseA != mouseX && mouseB != mouseY){
-                    //     cout << ">> ";
-                    //     cin >> str;
-                    //     str += ".txt";
-                    //     writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
-                    // }
-                }
-            #else
-                
-            #endif
+            cout << "ProcessEvents -- mouse button was released!" << endl;
+            if(keyPressed->button == sf::Mouse::Button::Right){
+                cout << "the right button was pressed" << endl;
+                cout << "mouse x: " << sf::Mouse::getPosition(window).x << endl;
+                cout << "mouse y: " << sf::Mouse::getPosition(window).y << endl;
+            }
+            else if(keyPressed->button == sf::Mouse::Button::Left){
+                cout << "left button?" << endl;
+                pause = true;
+                mouseX = sf::Mouse::getPosition(window).x;
+                mouseY = sf::Mouse::getPosition(window).y;
+                cout << "[" << mouseX << "][" << mouseY << "] was pressed." << endl;
+                makeLive(twoD, mouseX, mouseY);
+                // if(mouseA != mouseX && mouseB != mouseY){
+                //     cout << ">> ";
+                //     cin >> str;
+                //     str += ".txt";
+                //     writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
+                // }
+            }
         }
         else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()){
             std::cout << "new mouse x: " << mouseMoved->position.x << std::endl;
