@@ -42,7 +42,7 @@ int main()
     //----------S E T U P ------------------------------:
 
     //declare a window object:
-    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Game of Life");
+    sf::RenderWindow window(sf::VideoMode({SCREEN_WIDTH, SCREEN_HEIGHT}), "Game of Life");
     //
     //VideoMode class has functions to detect screen size etc.
     //RenderWindow constructor has a third argumnet to set style
@@ -112,78 +112,66 @@ int main()
 void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
     // check all the window's events that were triggered since the last iteration of the loop
 
-    sf::Event event;
+    std::optional event = window.pollEvent(); // event->is<sf::Event::Closed>()
     int mouseX, mouseY, mouseA, mouseB;
     string str;
 
     //go through all the pending events: keyboard, mouse, close, resize, etc.
     //pollEvent and waitEvent are the only two functions that can fill event
-    while (window.pollEvent(event))//or waitEvent
+    while (event)//or waitEvent
     {
         // check the type of the event...
-        switch (event.type)
+        if (event->is<sf::Event::Closed>())
         {
-        // window closed
-        // "close requested" event: we close the window
-        case sf::Event::Closed:
             window.close();
-            break;
-            // key pressed
-        case sf::Event::KeyPressed:
-            switch(event.key.code){
-            case sf::Keyboard::P:
-                // [P]ause (toggle)
+        }
+        else if(auto* keyPressed = event->getIf<sf::Event::KeyPressed>()){
+            // check which key pressed
+            // sf::Keyboard::Key::A
+            if (keyPressed->scancode == sf::Keyboard::Scancode::P)
                 pause = !pause;
-                break;
-            case sf::Keyboard::R:
-                // generate [R]andom pattern
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::R){
                 pause = true;
                 config(twoD);
-                break;
-            case sf::Keyboard::C:
-                // [C]lear screen
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::C){
                 pause = true;
                 clear(twoD);
-                break;
-            case sf::Keyboard::S:
-                // [S]ave screenshot
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
                 pause = true;
                 std::cout << ">> ";
                 std::cin >> str;
                 str += ".txt";
                 WriteIntArray(str, twoD);
-                break;
-            case sf::Keyboard::L:
-                // [L]oad screenshot or selection
+            }
+            else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
                 pause = true;
                 clear(twoD);
                 std::cout << ">> ";
                 std::cin >> str;
                 str += ".txt";
                 ReadIntArray(str, twoD);
-                break;
             }
-            break;
-        case sf::Event::MouseButtonPressed:
-            // upper left coordinates stored here
-            mouseA = event.mouseButton.x;
-            mouseB = event.mouseButton.y;
-            break;
-        case sf::Event::MouseButtonReleased:
-            if (event.mouseButton.button == sf::Mouse::Right)
-            {
-                // right mouse button
+        }
+        else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
+            // mouseA = event.mouseButton.x;
+            // mouseB = event.mouseButton.y;
+            mouseA = sf::Mouse::getPosition().x;
+            mouseB = sf::Mouse::getPosition().y;
+        }
+        else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonReleased>()){
+            if(keyPressed->button == sf::Mouse::Button::Right){
                 std::cout << "the right button was pressed" << std::endl;
-                std::cout << "mouse x: " << event.mouseButton.x << std::endl;
-                std::cout << "mouse y: " << event.mouseButton.y << std::endl;
+                std::cout << "mouse x: " << sf::Mouse::getPosition().x << std::endl;
+                std::cout << "mouse y: " << sf::Mouse::getPosition().y << std::endl;
             }
-            else{
-                // left mouse button
+            else if(keyPressed->button == sf::Mouse::Button::Left){
                 std::cout<<"left button?"<<std::endl;
 
                 // bottom right coordinates stored here
-                mouseX = event.mouseButton.x;
-                mouseY = event.mouseButton.y;
+                mouseX = sf::Mouse::getPosition().x;
+                mouseY = sf::Mouse::getPosition().y;
                 std::cout << "[" << mouseX << "][" << mouseY
                           << "] was pressed." << std::endl;
 
@@ -206,10 +194,98 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
                                       mouseX, mouseY, str);
                 }
             }
-            break;
-        default:
-            break;
         }
+
+
+        // switch (event.type)
+        // {
+        // // window closed
+        // // "close requested" event: we close the window
+        // case sf::Event::Closed:
+        //     window.close();
+        //     break;
+        //     // key pressed
+        // case sf::Event::KeyPressed:
+        //     switch(event.key.code){
+        //     case sf::Keyboard::P:
+        //         // [P]ause (toggle)
+        //         pause = !pause;
+        //         break;
+        //     case sf::Keyboard::R:
+        //         // generate [R]andom pattern
+        //         pause = true;
+        //         config(twoD);
+        //         break;
+        //     case sf::Keyboard::C:
+        //         // [C]lear screen
+        //         pause = true;
+        //         clear(twoD);
+        //         break;
+        //     case sf::Keyboard::S:
+        //         // [S]ave screenshot
+        //         pause = true;
+        //         std::cout << ">> ";
+        //         std::cin >> str;
+        //         str += ".txt";
+        //         WriteIntArray(str, twoD);
+        //         break;
+        //     case sf::Keyboard::L:
+        //         // [L]oad screenshot or selection
+        //         pause = true;
+        //         clear(twoD);
+        //         std::cout << ">> ";
+        //         std::cin >> str;
+        //         str += ".txt";
+        //         ReadIntArray(str, twoD);
+        //         break;
+        //     }
+        //     break;
+        // case sf::Event::MouseButtonPressed:
+        //     // upper left coordinates stored here
+        //     mouseA = event.mouseButton.x;
+        //     mouseB = event.mouseButton.y;
+        //     break;
+        // case sf::Event::MouseButtonReleased:
+        //     if (event.mouseButton.button == sf::Mouse::Right)
+        //     {
+        //         // right mouse button
+        //         std::cout << "the right button was pressed" << std::endl;
+        //         std::cout << "mouse x: " << event.mouseButton.x << std::endl;
+        //         std::cout << "mouse y: " << event.mouseButton.y << std::endl;
+        //     }
+        //     else{
+        //         // left mouse button
+        //         std::cout<<"left button?"<<std::endl;
+
+        //         // bottom right coordinates stored here
+        //         mouseX = event.mouseButton.x;
+        //         mouseY = event.mouseButton.y;
+        //         std::cout << "[" << mouseX << "][" << mouseY
+        //                   << "] was pressed." << std::endl;
+
+        //         // toggle live/dead cells
+        //         makeLive(twoD, mouseX, mouseY);
+
+        //         if(mouseA != mouseX && mouseB != mouseY){
+
+        //             // if the coordinates of the mouse press
+        //             // are different from the mouse release
+        //             // coordinates, that means the user
+        //             // has clicked and dragged from one
+        //             // part of the screen to another
+        //             // to save a portion of the screen
+
+        //             std::cout << ">> ";
+        //             std::cin >> str;
+        //             str += ".txt";
+        //             writePartialArray(twoD, mouseA, mouseB,
+        //                               mouseX, mouseY, str);
+        //         }
+        //     }
+        //     break;
+        // default:
+        //     break;
+        // }
     }
 
 }
@@ -224,10 +300,10 @@ void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]
             shapeArray[row][col].setSize(sf::Vector2f(CELL_SIZE,CELL_SIZE)); // creates a square (ex: 10x10)
             shapeArray[row][col].setPosition(sf::Vector2f(vectorX,vectorY));
             if(intArray[row][col] == 1){
-                shapeArray[row][col].setFillColor(sf::Color::Color(127,255,0)); // green
+                shapeArray[row][col].setFillColor(sf::Color(127,255,0)); // green
             }
             else{
-                shapeArray[row][col].setFillColor(sf::Color::Color(0,0,0)); // black
+                shapeArray[row][col].setFillColor(sf::Color(0,0,0)); // black
             }
         }
     }
