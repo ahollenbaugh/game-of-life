@@ -145,28 +145,21 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
                 clear(twoD);
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
-                #ifdef DEBUG
-                    cout << "ProcessEvents -- the S key was pressed! Saving pattern..." << endl;
-                    pause = true;
-                    cout << "Enter file name (.txt will be appended for you): ";
-                    cin >> str;
-                    str += ".txt";
-                    WriteIntArray(str, twoD);
-                #else
-                #endif
+                cout << "ProcessEvents -- the S key was pressed! Saving pattern..." << endl;
+                pause = true;
+                cout << "Enter file name (.txt will be appended for you): ";
+                cin >> str;
+                str += ".txt";
+                WriteIntArray(str, twoD);
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
-                #ifdef DEBUG
-                    cout << "ProcessEvents -- the L key was pressed! Loading pattern..." << endl;
-                    pause = true;
-                    cout << "Enter the name of the file you'd like to open (.txt will be appended for you): ";
-                    cin >> str;
-                    str += ".txt";
-                    clear(twoD);
-                    ReadIntArray(str, twoD);
-                #else
-                    
-                #endif
+                cout << "ProcessEvents -- the L key was pressed! Loading pattern..." << endl;
+                pause = true;
+                cout << "Enter the name of the file you'd like to open (.txt will be appended for you): ";
+                cin >> str;
+                str += ".txt";
+                clear(twoD);
+                ReadIntArray(str, twoD);
             }
         }
         else if(auto* keyPressed = event->getIf<sf::Event::MouseButtonPressed>()){
@@ -189,12 +182,6 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
                 mouseY = sf::Mouse::getPosition(window).y;
                 cout << "[" << mouseX << "][" << mouseY << "] was pressed." << endl;
                 makeLive(twoD, mouseX, mouseY);
-                // if(mouseA != mouseX && mouseB != mouseY){
-                //     cout << ">> ";
-                //     cin >> str;
-                //     str += ".txt";
-                //     writePartialArray(twoD, mouseA, mouseB, mouseX, mouseY, str);
-                // }
             }
         }
         else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()){
