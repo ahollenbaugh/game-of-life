@@ -7,6 +7,7 @@
 
 #define DEBUG
 #define SEMI
+#define RANDOM rand() % MAX
 
 using namespace std;
 
@@ -14,10 +15,10 @@ using namespace std;
 
 // ========== Constants ==========
 // set integer array + RectangleShape array dimensions
-const int MAX = 150;
+const int MAX = 100;
 const int GRID_WIDTH = MAX;
 const int GRID_HEIGHT = MAX;
-const int CELL_SIZE = 10; // each square in the grid will be 10px x 10px
+const int CELL_SIZE = 20; // each square in the grid will be 10px x 10px
 
 // window settings
 const int SCREEN_WIDTH = MAX * CELL_SIZE; // pixels
@@ -99,16 +100,16 @@ void FillShapes(sf::RectangleShape shapeArray[][GRID_WIDTH], int intArray[][MAX]
             shapeArray[row][col].setSize(sf::Vector2f(CELL_SIZE,CELL_SIZE)); // creates a square (ex: 10x10)
             shapeArray[row][col].setPosition(sf::Vector2f(vectorX,vectorY));
             if(intArray[row][col] == 1){
-                shapeArray[row][col].setFillColor(sf::Color(127,255,0)); // green
+                // shapeArray[row][col].setFillColor(sf::Color(127,255,0)); // green
+                shapeArray[row][col].setFillColor(sf::Color(RANDOM, RANDOM, RANDOM));
             }
             else{
                 shapeArray[row][col].setFillColor(sf::Color(0,0,0)); // black
             }
+            // shapeArray[row][col].setOutlineColor(sf::Color(64, 64, 64));
+            // shapeArray[row][col].setOutlineThickness(1);
         }
     }
-
-    // want cell color to change the longer it stays alive
-
 }
 void ShowShapes(sf::RenderWindow& window, sf::RectangleShape shapeArray[][GRID_WIDTH]){
     // draw squares on the window object
@@ -146,24 +147,25 @@ void ProcessEvents(sf::RenderWindow &window, bool &pause, int twoD[][MAX]){
             else if(keyPressed->scancode == sf::Keyboard::Scancode::S){
                 #ifdef DEBUG
                     cout << "ProcessEvents -- the S key was pressed! Saving pattern..." << endl;
-                #else
                     pause = true;
-                    cout << ">> ";
+                    cout << "Enter file name (.txt will be appended for you): ";
                     cin >> str;
                     str += ".txt";
                     WriteIntArray(str, twoD);
+                #else
                 #endif
             }
             else if(keyPressed->scancode == sf::Keyboard::Scancode::L){
                 #ifdef DEBUG
                     cout << "ProcessEvents -- the L key was pressed! Loading pattern..." << endl;
-                #else
                     pause = true;
-                    clear(twoD);
-                    cout << ">> ";
+                    cout << "Enter the name of the file you'd like to open (.txt will be appended for you): ";
                     cin >> str;
                     str += ".txt";
+                    clear(twoD);
                     ReadIntArray(str, twoD);
+                #else
+                    
                 #endif
             }
         }
@@ -213,6 +215,7 @@ void initialize(int twoD[][MAX]){
 void config(int twoD[][MAX]){
     // fill in initial configuration
     // can also be used when [R]andom selected
+    clear(twoD);
     int a, b;
     for(int z = 0; z < 5000; z++){
         a = rand() % MAX;
@@ -276,6 +279,9 @@ void clear(int twoD[][MAX]){
             twoD[i][j] = 0;
         }
     }
+    #ifdef DEBUG
+        print2D(twoD);
+    #endif
 }
 void WriteIntArray(string filename, int intArray[][MAX]){
     // writes whole screen to a file
@@ -396,12 +402,14 @@ void glider(int twoD[][MAX]){
 }
 void print2D(int twoD[][MAX]){
     // print 2D array
-    for(int i = 1; i < MAX-1; i++){
-        for(int j = 1; j < MAX-1; j++){
+    for(int i = 0; i < MAX; i++){
+        for(int j = 0; j < MAX; j++){
             if(twoD[i][j] == 0)
-                cout << setw(4) << " ";
+                // cout << setw(4) << "x";
+                cout << "x";
             if(twoD[i][j] == 1)
-                cout << setw(4) << "*";
+                // cout << setw(4) << "o";
+                cout << "o";
         }
         cout << endl;
     }
